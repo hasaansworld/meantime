@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">MeanTime</string>
+
+    <string name="priority_low">Low Priority: No reminder or notification.</string>
+    <string name="priority_medium">Medium Priority: Get a notification when it\'s time.</string>
+    <string name="priority_high">High Priority: An alarm will remind you when it\'s time.</string>
+
+    <string name="permission_rationale">Please provide the necessary permissions to access contacts and profile pictures.</string>
+    <string name="send_to">Invite friends...</string>
+
+</resources>

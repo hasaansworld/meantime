@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "233945429601",
+    "firebase_url": "https://meantime-deae1.firebaseio.com",
+    "project_id": "meantime-deae1",
+    "storage_bucket": "meantime-deae1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:233945429601:android:20d7c047c2edeb78",
+        "android_client_info": {
+          "package_name": "com.meantime"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "233945429601-qqvf3v1nb4ga7fe1u5ukan0mr5muud5n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.meantime",
+            "certificate_hash": "705ce1036190edcfa3ba0a20537a9d59c341b42e"
+          }
+        },
+        {
+          "client_id": "233945429601-78ntpr8be7gj4bokafq57p1qdlrvbkjk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCA3Uuud9v8VBzLzm6Qec78WDTtXxAjVlQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "233945429601-78ntpr8be7gj4bokafq57p1qdlrvbkjk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
