@@ -10,5 +10,6 @@
     <color name="orange">#FFD500</color>
     <color name="textGreen">#12992C</color>
     <color name="textOrange">#FF8400</color>
+    <color name="red_dark">#FF1414</color>
 
 </resources>

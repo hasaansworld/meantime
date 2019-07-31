@@ -20,6 +20,7 @@ import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.shuhart.stickyheader.StickyAdapter;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -36,18 +37,13 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     Context context;
     List <ScheduleItem> list ;
+    List <String> dateList;
     Realm realm;
     int[] colors = {R.color.orange, R.color.green, R.color.red};
     Resources resources;
     int filterPosition = 0;
 
-    final static int TYPE_TASK = 0;
-    final static int TYPE_DATE = 1;
-    final static int TYPE_MONTH = 2;
-    final static int TYPE_YEAR = 3;
-
     String dateToday, dateYesterday, dateTomorrow;
-    String thisMonth, lastMonth, nextMonth;
 
     public ScheduleAdapter(Context context){
         this.context = context;
@@ -67,21 +63,14 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         calendar.add(Calendar.DATE, 2);
         dateTomorrow = DateFormat.format("dd MMM yyyy", calendar).toString();
         date(0, false);
-
-        Calendar cal = Calendar.getInstance();
-        thisMonth = DateUtils.getMonth(DateFormat.format("dd MMM yyyy", cal).toString());
-        cal.add(Calendar.MONTH, -1);
-        lastMonth = DateUtils.getMonth(DateFormat.format("dd MMM yyyy", cal).toString());
-        cal.add(Calendar.MONTH, +2);
-        nextMonth = DateUtils.getMonth(DateFormat.format("dd MMM yyyy", cal).toString());
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder{
         LinearLayout layout;
         ImageView imageColor,imageLocation,profilePicture;
-        TextView title,time,date,description, month, year;
-        CardView cardYear;
-        View gap;
+        TextView title,time,date,description;
+        LinearLayout background, foreground;
+
         public ViewHolder(View v){
             super(v);
             layout = v.findViewById(R.id.layout);
@@ -90,12 +79,11 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             profilePicture = v.findViewById(R.id.profilePicture);
             title = v.findViewById(R.id.title);
             time = v.findViewById(R.id.time);
-            cardYear = v.findViewById(R.id.cardYear);
-            year = v.findViewById(R.id.year);
-            month = v.findViewById(R.id.month);
             date = v.findViewById(R.id.date);
             description = v.findViewById(R.id.description);
-            gap = v.findViewById(R.id.gap);
+
+            background = v.findViewById(R.id.background);
+            foreground = v.findViewById(R.id.foreground);
         }
     }
 
@@ -110,9 +98,9 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder h, int position) {
         ScheduleItem item = list.get(position);
         if(h instanceof ViewHolder) {
-            ViewHolder holder = (ViewHolder)h;
+            ViewHolder holder = (ViewHolder) h;
             holder.title.setText(item.getTitle());
-            if(item.getDescription().equals(""))
+            if (item.getDescription().equals(""))
                 holder.description.setText("No details yet.");
             else
                 holder.description.setText(item.getDescription());
@@ -134,62 +122,22 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 holder.imageLocation.setVisibility(View.VISIBLE);
             if(filterPosition <= 2){
                 holder.date.setVisibility(View.GONE);
-                holder.gap.setVisibility(View.GONE);
             }
             else{
                 if(position == 0 || !item.getDate().equals(list.get(position-1).getDate())){
                     holder.date.setVisibility(View.VISIBLE);
-                    holder.gap.setVisibility(View.VISIBLE);
-                    if(item.getDate().equals(dateToday))
+                    if(item.getDate().equals(dateToday) && filterPosition <= 4)
                         holder.date.setText("Today");
-                    else if(item.getDate().equals(dateYesterday))
+                    else if(item.getDate().equals(dateYesterday) && filterPosition <= 4)
                         holder.date.setText("Yesterday");
-                    else if(item.getDate().equals(dateTomorrow))
+                    else if(item.getDate().equals(dateTomorrow) && filterPosition <= 4)
                         holder.date.setText("Tomorrow");
                     else
                         holder.date.setText(item.getDate());
                 }
                 else{
-                    holder.gap.setVisibility(View.GONE);
                     holder.date.setVisibility(View.GONE);
                 }
-            }
-            if(filterPosition <= 4){
-                holder.month.setVisibility(View.GONE);
-            }
-            else{
-                String month = DateUtils.getMonth(item.getDate());
-                if(position == 0 || !DateUtils.getMonth(list.get(position-1).getDate()).equals(month) || DateUtils.getYear(list.get(position-1).getDate()) != DateUtils.getYear(item.getDate())){
-                    holder.month.setVisibility(View.VISIBLE);
-                    if(month.equals(thisMonth)){
-                        holder.month.setText("This Month");
-                    }
-                    else if(month.equals(lastMonth)){
-                        holder.month.setText("Last Month");
-                    }
-                    else if(month.equals(nextMonth)){
-                        holder.month.setText("Next Month");
-                    }
-                    else{
-                        holder.month.setText(month);
-                    }
-                }
-                else
-                    holder.month.setVisibility(View.GONE);
-            }
-
-            if(filterPosition != 6){
-                holder.cardYear.setVisibility(View.GONE);
-            }
-            else{
-                int year = DateUtils.getYear(item.getDate());
-                if(position == 0 || year != DateUtils.getYear(list.get(position-1).getDate())){
-                    holder.cardYear.setVisibility(View.VISIBLE);
-                    holder.year.setText(Integer.toString(year));
-                }
-                else
-                    holder.cardYear.setVisibility(View.GONE);
-
             }
         }
     }
@@ -199,12 +147,14 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         return list.size();
     }
 
+
     public void setFilterPosition(int p){
         filterPosition = p;
     }
 
     public void date(int difference, boolean filter){
         list = new ArrayList<>();
+        dateList = new ArrayList<>();
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DATE, difference);
         String dateToday = DateFormat.format("dd MMM yyyy", calendar).toString();
@@ -220,6 +170,7 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     public void week(boolean update){
         list = new ArrayList<>();
+        dateList = new ArrayList<>();
         Calendar calendar = Calendar.getInstance();
         List<Task> allTasks = new ArrayList<>();
         allTasks.addAll(realm.where(Task.class).findAll());
@@ -230,6 +181,7 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             if(calendar.get(Calendar.YEAR) == taskCal.get(Calendar.YEAR) && calendar.get(Calendar.WEEK_OF_YEAR) == taskCal.get(Calendar.WEEK_OF_YEAR)) {
                 ScheduleItem scheduleItem = new ScheduleItem(task.getTitle(), task.getTime(), task.getDescription(), null, task.getLocation(), task.getPriority());
                 scheduleItem.setDate(task.getDate());
+                if(!dateList.contains(task.getDate())) dateList.add(task.getDate());
                 list.add(scheduleItem);
             }
         }
@@ -238,6 +190,7 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     void month(boolean update){
         list = new ArrayList<>();
+        dateList = new ArrayList<>();
         Calendar calendar = Calendar.getInstance();
         List<Task> allTasks = new ArrayList<>();
         allTasks.addAll(realm.where(Task.class).findAll());
@@ -248,6 +201,7 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             if(calendar.get(Calendar.YEAR) == taskCal.get(Calendar.YEAR) && calendar.get(Calendar.MONTH) == taskCal.get(Calendar.MONTH)) {
                 ScheduleItem scheduleItem = new ScheduleItem(task.getTitle(), task.getTime(), task.getDescription(), null, task.getLocation(), task.getPriority());
                 scheduleItem.setDate(task.getDate());
+                if(!dateList.contains(task.getDate())) dateList.add(task.getDate());
                 list.add(scheduleItem);
             }
         }
@@ -256,6 +210,7 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     void year(boolean update){
         list = new ArrayList<>();
+        dateList = new ArrayList<>();
         Calendar calendar = Calendar.getInstance();
         List<Task> allTasks = new ArrayList<>();
         allTasks.addAll(realm.where(Task.class).findAll());
@@ -266,6 +221,7 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             if(calendar.get(Calendar.YEAR) == taskCal.get(Calendar.YEAR)) {
                 ScheduleItem scheduleItem = new ScheduleItem(task.getTitle(), task.getTime(), task.getDescription(), null, task.getLocation(), task.getPriority());
                 scheduleItem.setDate(task.getDate());
+                if(!dateList.contains(task.getDate())) dateList.add(task.getDate());
                 list.add(scheduleItem);
             }
         }
@@ -274,12 +230,14 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     void allTime(boolean update){
         list = new ArrayList<>();
+        dateList = new ArrayList<>();
         List<Task> allTasks = new ArrayList<>();
         allTasks.addAll(realm.where(Task.class).findAll());
         Collections.sort(allTasks);
         for(Task task: allTasks) {
             ScheduleItem scheduleItem = new ScheduleItem(task.getTitle(), task.getTime(), task.getDescription(), null, task.getLocation(), task.getPriority());
             scheduleItem.setDate(task.getDate());
+            if(!dateList.contains(task.getDate())) dateList.add(task.getDate());
             list.add(scheduleItem);
         }
         if(update) notifyDataSetChanged();
@@ -315,5 +273,46 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     String getDateAt(int position){
         return list.get(position).getDate();
+    }
+
+    int getNearestPosition(){
+        if(list.size() == 0)
+            return 0;
+        int position = 0;
+
+        Calendar calendar = Calendar.getInstance();
+
+        boolean isFound = false;
+        for(int i = 0; i < getItemCount(); i++){
+            ScheduleItem item = list.get(i);
+            String date = item.getDate();
+            if(date != null && date.equals(dateToday)){
+                isFound = true;
+                position = i;
+            }
+        }
+        if(!isFound){
+            long timeInMillis = calendar.getTimeInMillis();
+            for(int i = 0; i < list.size(); i++){
+                ScheduleItem item = list.get(i);
+                String date = item.getDate();
+                if(date != null && DateUtils.getCalendarFromString(date).getTimeInMillis() > timeInMillis){
+                    position = i;
+                }
+            }
+        }
+
+        String lastDate = list.get(list.size()-1).getDate();
+        if(lastDate != null && calendar.getTimeInMillis() > DateUtils.getCalendarFromString(lastDate).getTimeInMillis())
+            position = list.size()-1;
+
+        return position;
+    }
+
+    void removeItem(int position){
+        list.remove(position);
+        notifyItemRemoved(position);
+        if(position != list.size())
+            notifyItemChanged(position);
     }
 }

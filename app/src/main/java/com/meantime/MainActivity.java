@@ -86,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     LinearLayout filterLayout, layoutSpanOptions, layoutPriorityOptions;
     View overlay, toolbarOverlay;
     Fragment fragment = null;
+    FriendsFragment friendsFragment;
     ScheduleFragment scheduleFragment;
     int filterPosition = 0;
 
@@ -255,6 +256,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                                     scheduleFragment.filterPosition = finalI - 2;
                                     scheduleFragment.filterSchedule();
                                 }
+                                overlay.setVisibility(View.GONE);
+                                toolbarOverlay.setVisibility(View.GONE);
                                 priorityImage.setVisibility(View.GONE);
                                 priorityText.setVisibility(View.GONE);
                                 filterText.setTextColor(getResources().getColor(R.color.colorAccent));
@@ -279,6 +282,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         public void run() {
                             TextView textView = (TextView)layout.getChildAt(1);
                             filterCard.setVisibility(View.GONE);
+                            overlay.setVisibility(View.GONE);
+                            toolbarOverlay.setVisibility(View.GONE);
                             priorityText.setVisibility(View.VISIBLE);
                             priorityText.setText(textView.getText().toString());
                             priorityImage.setVisibility(View.VISIBLE);
@@ -489,7 +494,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 ExpandCollapseAnimation.collapse(filterLayout);
                 item.setIcon(R.drawable.ic_time_black_24dp);
                 friends = true;
-                fragment = new FriendsFragment();
+                if(friendsFragment == null)
+                    friendsFragment = new FriendsFragment();
+                fragment = friendsFragment;
                 fabAdd.setImageResource(R.drawable.ic_person_add_white_24dp);
             }
             else{
@@ -497,7 +504,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 ExpandCollapseAnimation.expand(filterLayout);
                 item.setIcon(R.drawable.ic_person_black_24dp);
                 friends = false;
-                fragment = new ScheduleFragment();
+                if(scheduleFragment == null)
+                    scheduleFragment = new ScheduleFragment();
+                fragment = scheduleFragment;
                 scheduleFragment = (ScheduleFragment) fragment;
                 scheduleFragment.filterPosition = filterPosition;
                 fabAdd.setImageResource(R.drawable.ic_add_white_24dp);
