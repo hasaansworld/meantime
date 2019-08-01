@@ -34,7 +34,8 @@
                 app:tabIndicatorHeight="2dp"
                 app:tabPaddingBottom="-15dp"
                 app:tabSelectedTextColor="@color/colorAccent"
-                app:tabTextColor="@color/colorAccentLight">
+                app:tabTextColor="@color/colorAccentLight"
+                android:visibility="gone">
 
                 <com.google.android.material.tabs.TabItem
                     android:layout_width="wrap_content"
@@ -234,7 +235,8 @@
                 android:layout_height="wrap_content"
                 android:background="?attr/selectableItemBackground"
                 android:clickable="true"
-                android:padding="10dp">
+                android:padding="10dp"
+                android:visibility="gone">
 
                 <TextView
                     android:id="@+id/expandText"
@@ -259,9 +261,7 @@
                 android:id="@+id/moreOptionsLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:alpha="0"
-                android:orientation="vertical"
-                android:visibility="gone">
+                android:orientation="vertical">
 
                 <LinearLayout
                     android:id="@+id/priorityLayout"
@@ -269,7 +269,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:visibility="gone">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -390,7 +391,8 @@
                     android:layout_marginTop="5dp"
                     android:text="@string/priority_low"
                     android:textColor="@color/textOrange"
-                    android:textSize="14sp" />
+                    android:textSize="14sp"
+                    android:visibility="gone" />
 
                 <TextView
                     android:id="@+id/privacyText"
@@ -468,7 +470,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:visibility="gone">
 
                     <com.google.android.material.textfield.TextInputLayout
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"

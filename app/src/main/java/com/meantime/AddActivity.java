@@ -19,6 +19,7 @@ import androidx.work.WorkManager;
 import android.Manifest;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.app.AlarmManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -132,11 +133,6 @@ public class AddActivity extends AppCompatActivity implements EasyPermissions.Pe
         setContentView(R.layout.activity_add);
 
         Realm.init(this);
-        RealmConfiguration realmConfiguration = new RealmConfiguration.Builder()
-                .name("database")
-                .schemaVersion(2)
-                .build();
-        Realm.setDefaultConfiguration(realmConfiguration);
         realm = Realm.getDefaultInstance();
 
         connectivityManager = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -399,6 +395,9 @@ public class AddActivity extends AppCompatActivity implements EasyPermissions.Pe
                         if (friendsList.size() > 0) progressBar.setVisibility(View.VISIBLE);
                         if (tabLayout.getSelectedTabPosition() == 0) {
                             Task task = new Task(title.getText().toString(), description.getText().toString(), dateText.getText().toString(), timeText.getText().toString(), location.getText().toString(), calendar.getTimeInMillis(), priority, friendsList);
+                            String dateToday = DateFormat.format("dd MMM yyyy", Calendar.getInstance()).toString();
+                            if(task.getDate().equals(dateToday))
+                                AlarmReceiver.scheduleTask(AddActivity.this, task, (AlarmManager)getSystemService(Context.ALARM_SERVICE));
                             if (friendsList.size() > 0) {
                                 DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("users").child(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()).child("tasks").child(Long.toString(calendar.getTimeInMillis()));
                                 HashMap<String, Object> hashMap = new HashMap<>();
@@ -421,7 +420,6 @@ public class AddActivity extends AppCompatActivity implements EasyPermissions.Pe
                                                     hashMap1.put(Integer.toString(position), friend.getPhoneNumber());
                                                 }
                                                 taskRef.setValue(hashMap1);
-                                                task.setOnline(true);
                                                 addTaskToRealm(task);
                                             }
                                         })

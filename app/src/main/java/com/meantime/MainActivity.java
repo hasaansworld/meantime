@@ -16,6 +16,7 @@ import androidx.work.WorkContinuation;
 import androidx.work.WorkManager;
 
 import android.Manifest;
+import android.app.AlarmManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -34,6 +35,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
@@ -109,13 +111,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         if(!sharedPreferences.getBoolean("profileDone", false))
             startActivity(new Intent(MainActivity.this, ProfileEditActivity.class));
 
-        Realm.init(this);
-        RealmConfiguration realmConfiguration = new RealmConfiguration.Builder()
-                .name("database")
-                .schemaVersion(2)
-                .build();
-        Realm.setDefaultConfiguration(realmConfiguration);
-        realm = Realm.getDefaultInstance();
+        realm = RealmUtils.getRealm();
 
         //backgroundWork();
         getContactsPermission();
@@ -137,13 +133,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         });
 
         profilePicture = findViewById(R.id.profilePicture);
-        Glide.with(this).asBitmap().load(sharedPreferences.getString("profilePicPath", "")).placeholder(R.drawable.profile_picture).into(profilePicture);
         name = findViewById(R.id.name);
         phoneNumber = findViewById(R.id.phoneNumber);
         friendCount = findViewById(R.id.friendCount);
         requestCount = findViewById(R.id.requestCount);
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        phoneNumber.setText(currentUser.getPhoneNumber());
 
         fabAdd = findViewById(R.id.fabAdd);
         fabAdd.setOnClickListener(new View.OnClickListener() {
@@ -312,6 +305,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             });
         }
 
+        startScheduler();
     }
 
     private void backgroundWork() {
@@ -427,6 +421,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         .load(path)
                         .override(dpToPx, dpToPx)
                         .apply(RequestOptions.circleCropTransform())
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
                         .placeholder(R.drawable.profile_picture)
                         .into(new CustomTarget<Drawable>() {
                             @Override
@@ -453,6 +448,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
     public static float dpToPixel(float dp, Context context){
         return dp * ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+    }
+
+    public void setDrawerInfo(){
+        Glide.with(this).asBitmap().load(sharedPreferences.getString("profilePicPath", "")).diskCacheStrategy(DiskCacheStrategy.NONE).placeholder(R.drawable.profile_picture).into(profilePicture);
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        phoneNumber.setText(currentUser.getPhoneNumber());
     }
 
     public void setDefaultProfilePic(){
@@ -487,7 +488,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         if(item.getItemId() == android.R.id.home){
             slideMenu.openLeftSlide();
         }
-        else if(item.getItemId() == R.id.friends){
+        /*else if(item.getItemId() == R.id.friends){
             if(!friends) {
                 tab = 1;
                 filterPosition = scheduleFragment.filterPosition;
@@ -525,7 +526,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 }
             }, 300);
 
-        }
+        }*/
         return true;
     }
 
@@ -533,6 +534,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     protected void onStart() {
         super.onStart();
         setProfileIcon();
+        setDrawerInfo();
         name.setText(sharedPreferences.getString("name", ""));
     }
 
@@ -555,5 +557,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             new AppSettingsDialog.Builder(this).build().show();
         }
         getContactsPermission();
+    }
+
+    void startScheduler(){
+        AlarmReceiver.startSchedule(this);
     }
 }

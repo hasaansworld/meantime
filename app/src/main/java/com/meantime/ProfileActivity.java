@@ -15,8 +15,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
@@ -62,6 +64,19 @@ public class ProfileActivity extends AppCompatActivity {
         }
 
         showAbout();
+
+        profilePicture.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String path = sharedPreferences.getString("profilePicPath", "");
+                if(!path.equals("")) {
+                    Intent i = new Intent(ProfileActivity.this, FullPhotoActivity.class);
+                    i.putExtra("title", "Profile Picture");
+                    i.putExtra("path", path);
+                    startActivity(i);
+                }
+            }
+        });
     }
 
     private void showInformation() {
@@ -69,7 +84,7 @@ public class ProfileActivity extends AppCompatActivity {
         phoneNumber.setText(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber());
         String profilePicPath = sharedPreferences.getString("profilePicPath", "");
         if(!profilePicPath.equals("")){
-            Glide.with(this).asBitmap().load(profilePicPath).placeholder(R.drawable.profile_picture).into(profilePicture);
+            Glide.with(this).asBitmap().load(profilePicPath).diskCacheStrategy(DiskCacheStrategy.NONE).placeholder(R.drawable.profile_picture).into(profilePicture);
         }
     }
 

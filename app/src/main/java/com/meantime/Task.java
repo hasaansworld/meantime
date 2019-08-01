@@ -10,7 +10,7 @@ public class Task extends RealmObject implements Comparable<Task> {
     long timeInMillis;
     int priority;
     RealmList<Friend> friendsList;
-    boolean online = false;
+    boolean isInTrash = false;
 
     public Task()
     {
@@ -93,12 +93,12 @@ public class Task extends RealmObject implements Comparable<Task> {
         this.friendsList = friendsList;
     }
 
-    public boolean isOnline() {
-        return online;
+    public boolean isInTrash() {
+        return isInTrash;
     }
 
-    public void setOnline(boolean online) {
-        this.online = online;
+    public void setIsInTrash(boolean isInTrash) {
+        this.isInTrash = isInTrash;
     }
 
     @Override

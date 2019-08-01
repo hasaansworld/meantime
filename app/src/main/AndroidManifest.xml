@@ -14,21 +14,30 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".HelpActivity"
+        <activity android:name=".FullPhotoActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Black">
+        </activity>
+        <activity
+            android:name=".HelpActivity"
             android:screenOrientation="portrait" />
-        <activity android:name=".SettingsActivity"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".TrashActivity"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".NotificationsActivity"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".ProfileActivity"
-            android:screenOrientation="portrait"/>
+        <activity
+            android:name=".SettingsActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".TrashActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".NotificationsActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ProfileActivity"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".AddActivity"
-            android:theme="@style/AppThemeNoActionBar"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="stateHidden"/>
+            android:theme="@style/AppThemeNoActionBar"
+            android:windowSoftInputMode="stateHidden" />
         <activity
             android:name=".ProfileEditActivity"
             android:screenOrientation="portrait"
@@ -36,7 +45,8 @@
         <activity
             android:name=".MainActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/AppThemeNoActionBar" />
+            android:theme="@style/AppThemeNoActionBar"
+            android:launchMode="singleTop"/>
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"
             android:screenOrientation="portrait"
@@ -51,6 +61,27 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+
+        <receiver android:name=".AlarmReceiver">
+            <intent-filter>
+                <action android:name="com.meantime.ACTION_ALARM" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name=".NotificationReceiver">
+            <intent-filter>
+                <action android:name="com.meantime.ACTION_NOTIFICATION" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name=".WakeBroadcast"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

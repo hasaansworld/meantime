@@ -94,8 +94,8 @@
 
                         <ImageView
                             android:id="@+id/colorImage"
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
+                            android:layout_width="12dp"
+                            android:layout_height="12dp"
                             android:src="@drawable/red_circle" />
 
                         <TextView

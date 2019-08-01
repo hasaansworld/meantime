@@ -11,6 +11,7 @@ public class MyApplication extends MultiDexApplication {
     @Override
     public void onCreate() {
         super.onCreate();
+        RealmUtils.init(this);
         changeFonts();
     }
 

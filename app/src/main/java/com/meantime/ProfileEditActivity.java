@@ -266,7 +266,7 @@ public class ProfileEditActivity extends AppCompatActivity {
             File dirFile = new File(Environment.getExternalStorageDirectory(), "MeanTime");
             if (!dirFile.exists())
                 dirFile.mkdir();
-            path = Environment.getExternalStorageDirectory() + "/MeanTime/profile picture.png";
+            path = Environment.getExternalStorageDirectory() + "/MeanTime/profile picture "+System.currentTimeMillis()+".png";
             Uri uriDestination = Uri.fromFile(new File(path));
             UCrop.Options options = new UCrop.Options();
             options.setHideBottomControls(true);
