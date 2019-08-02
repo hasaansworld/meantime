@@ -14,10 +14,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".FullPhotoActivity"
+        <activity android:name=".DetailsActivity"></activity>
+        <activity
+            android:name=".FullPhotoActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.Black">
-        </activity>
+            android:theme="@style/AppTheme.Black"></activity>
         <activity
             android:name=".HelpActivity"
             android:screenOrientation="portrait" />
@@ -44,9 +45,9 @@
             android:windowSoftInputMode="stateHidden" />
         <activity
             android:name=".MainActivity"
+            android:launchMode="singleTop"
             android:screenOrientation="portrait"
-            android:theme="@style/AppThemeNoActionBar"
-            android:launchMode="singleTop"/>
+            android:theme="@style/AppThemeNoActionBar" />
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"
             android:screenOrientation="portrait"
@@ -62,26 +63,23 @@
             </intent-filter>
         </activity>
 
-
         <receiver android:name=".AlarmReceiver">
             <intent-filter>
                 <action android:name="com.meantime.ACTION_ALARM" />
             </intent-filter>
         </receiver>
-
         <receiver android:name=".NotificationReceiver">
             <intent-filter>
                 <action android:name="com.meantime.ACTION_NOTIFICATION" />
             </intent-filter>
         </receiver>
-
-        <receiver android:name=".WakeBroadcast"
+        <receiver
+            android:name=".WakeBroadcast"
             android:enabled="true">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-
     </application>
 
 </manifest>

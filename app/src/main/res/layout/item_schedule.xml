@@ -140,16 +140,37 @@
                         android:textSize="14sp" />
                 </LinearLayout>
 
+                <LinearLayout
+                    android:id="@+id/friendsLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="30dp"
+                    android:orientation="horizontal"
+                    android:layout_marginLeft="13dp"
+                    android:layout_gravity="bottom"
+                    android:gravity="center_vertical"
+                    android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/friendCount"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginLeft="2dp"
+                    android:textSize="12sp"
+                    android:gravity="center"
+                    android:textColor="#ffffff"
+                    android:background="@drawable/accent_circle"/>
+
                 <com.makeramen.roundedimageview.RoundedImageView
                     android:id="@+id/profilePicture"
                     android:layout_width="30dp"
                     android:layout_height="30dp"
-                    android:layout_gravity="bottom"
-                    android:layout_marginLeft="15dp"
+                    android:layout_marginLeft="2dp"
                     android:src="@drawable/profile_picture"
                     app:riv_border_color="@android:color/white"
                     app:riv_border_width="2dp"
-                    app:riv_oval="true" />
+                    app:riv_oval="true"/>
+
+                </LinearLayout>
 
             </LinearLayout>
 

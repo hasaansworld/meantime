@@ -182,7 +182,8 @@
                     android:src="@drawable/profile_picture"
                     app:riv_border_color="@android:color/white"
                     app:riv_border_width="2dp"
-                    app:riv_oval="true" />
+                    app:riv_oval="true"
+                    android:visibility="gone"/>
 
             </LinearLayout>
 

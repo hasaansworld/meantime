@@ -1,16 +1,20 @@
 package com.meantime;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
+
+import io.realm.Realm;
 
 public class TrashActivity extends AppCompatActivity {
     RecyclerView recyclerView;
@@ -57,6 +61,24 @@ public class TrashActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == android.R.id.home){
             onBackPressed();
+        }
+        else if(item.getItemId() == R.id.clear){
+            new AlertDialog.Builder(this, R.style.AppTheme_Dialog)
+                    .setTitle("Clear")
+                    .setMessage("Do you want to delete all the reminders from Trash?")
+                    .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            adapter.deleteAll();
+                        }
+                    })
+                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                        }
+                    })
+                    .show();
         }
         return true;
     }

@@ -127,7 +127,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         realm = RealmUtils.getRealm();
 
         //backgroundWork();
-        getContactsPermission();
+        //getContactsPermission();
         showSchedule();
 
 
