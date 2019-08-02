@@ -55,13 +55,8 @@ public class AdapterContactPicker extends RecyclerView.Adapter<AdapterContactPic
                 if(!selected) contactsList.add(friend);
             }
         }*/
-        Realm.init(context);
-        RealmConfiguration realmConfiguration = new RealmConfiguration.Builder()
-                .name("database")
-                .schemaVersion(2)
-                .build();
-        Realm.setDefaultConfiguration(realmConfiguration);
-        realm = Realm.getDefaultInstance();
+        realm = RealmUtils.getRealm();
+
         contactsList.addAll(realm.where(Friend.class).findAll());
         Collections.sort(contactsList, new Comparator<Friend>() {
             @Override

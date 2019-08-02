@@ -50,6 +50,9 @@ public class ScheduleFragment extends Fragment {
     int filterPosition = 0;
     int prevPosition = -1;
 
+    boolean isInSearch = false;
+    RecyclerItemTouchHelper itemTouchHelperCallback;
+
     public ScheduleFragment() {
         // Required empty public constructor
     }
@@ -75,13 +78,13 @@ public class ScheduleFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        updateDates();
+
         View v = inflater.inflate(R.layout.fragment_schedule, container, false);
         recyclerView = v.findViewById(R.id.recyclerView);
         layoutManager = new LinearLayoutManager(getContext());
         recyclerView.setLayoutManager(layoutManager);
 
-        ItemTouchHelper.SimpleCallback itemTouchHelperCallback = new RecyclerItemTouchHelper(0, ItemTouchHelper.LEFT, new RecyclerItemTouchHelper.RecyclerItemTouchHelperListener() {
+        itemTouchHelperCallback = new RecyclerItemTouchHelper(0, ItemTouchHelper.LEFT, new RecyclerItemTouchHelper.RecyclerItemTouchHelperListener() {
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction, int position) {
                 adapter.removeItem(position);
@@ -122,7 +125,7 @@ public class ScheduleFragment extends Fragment {
     }
 
 
-    private void updateCurrentPosition() {
+    /*private void updateCurrentPosition() {
         if(adapter.getItemCount() > 0) {
             int position = layoutManager.findFirstVisibleItemPosition();
             if (position == -1) position = adapter.getNearestPosition();
@@ -183,24 +186,22 @@ public class ScheduleFragment extends Fragment {
 
         recyclerView.scrollToPosition(adapter.getNearestPosition());
 
-        /*if(adapter.filterPosition <= 2) {
+        if(adapter.filterPosition <= 2) {
             switcherLayout.setVisibility(View.GONE);
         }
         else{
             switcherLayout.setVisibility(View.VISIBLE);
             dateSwitcher.setVisibility(View.VISIBLE);
             updateCurrentPosition();
-        }*/
+        }
 
-    }
+    }*/
 
     @Override
     public void onStart() {
         super.onStart();
         adapter = new ScheduleAdapter(getContext());
         recyclerView.setAdapter(adapter);
-        if(filterPosition != 0)
-            filterSchedule();
     }
 
     public void setOnItemSelectedListener(OnItemSelectedListener itemSelectedListener){
@@ -211,4 +212,12 @@ public class ScheduleFragment extends Fragment {
         void onItemSelected(Uri uri);
     }
 
+    void setInSearch(boolean inSearch){
+        this.isInSearch = inSearch;
+        itemTouchHelperCallback.setIsSwipeEnabled(!inSearch);
+    }
+
+    void search(String query){
+        adapter.setSearchQuery(query);
+    }
 }

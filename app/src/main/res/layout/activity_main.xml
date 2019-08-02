@@ -35,6 +35,58 @@
                 android:clickable="true"
                 android:visibility="gone"/>
 
+
+            <LinearLayout
+                android:id="@+id/searchLayout"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingLeft="11dp"
+                android:paddingRight="11dp"
+                android:background="#ffffff"
+                android:clickable="true"
+                android:visibility="invisible">
+
+                <ImageView
+                    android:id="@+id/searchBack"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_arrow_back_black_24dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"/>
+
+                <EditText
+                    android:id="@+id/search"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginLeft="8dp"
+                    android:background="#ffffff"
+                    android:drawablePadding="10dp"
+                    android:hint="Search something..."
+                    android:maxLines="1"
+                    android:inputType="text"
+                    android:padding="10dp"
+                    android:textColor="#000000"
+                    android:textColorHint="#aaaaaa"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:id="@+id/searchClear"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:padding="6dp"
+                    android:layout_marginLeft="10dp"
+                    android:src="@drawable/ic_close_black_24dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:visibility="gone"/>
+
+            </LinearLayout>
+
         </FrameLayout>
 
         <androidx.coordinatorlayout.widget.CoordinatorLayout

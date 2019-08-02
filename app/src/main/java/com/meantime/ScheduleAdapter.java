@@ -39,16 +39,18 @@ import io.realm.RealmConfiguration;
 public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     Context context;
-    List <ScheduleItem> list ;
-    List <String> dateList;
+    List<ScheduleItem> list;
+    List<ScheduleItem> allItems;
+    private List<String> dateList;
     Realm realm;
     int[] colors = {R.color.orange, R.color.green, R.color.red};
     Resources resources;
     int filterPosition = 0;
 
-    String dateToday, dateYesterday, dateTomorrow;
+    private String dateToday, dateYesterday, dateTomorrow;
+    String searchQuery = "";
 
-    public ScheduleAdapter(Context context){
+    public ScheduleAdapter(Context context) {
         this.context = context;
         resources = context.getResources();
         realm = RealmUtils.getRealm();
@@ -61,31 +63,16 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         dateTomorrow = DateFormat.format("dd MMM yyyy", calendar).toString();
 
         dateList = new ArrayList<>();
-
-        list = new ArrayList<>();
-        List<Task> allTasks = new ArrayList<>();
-        calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-        long timeInMillis = calendar.getTimeInMillis();
-        allTasks.addAll(realm.where(Task.class).equalTo("isInTrash", false).greaterThanOrEqualTo("timeInMillis", timeInMillis).findAll());
-        Collections.sort(allTasks);
-        for(Task task: allTasks) {
-            ScheduleItem scheduleItem = new ScheduleItem(task.getTitle(), task.getTime(), task.getDescription(), null, task.getLocation(), task.getPriority());
-            scheduleItem.setDate(task.getDate());
-            list.add(scheduleItem);
-        }
+        initialize();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder{
+    public class ViewHolder extends RecyclerView.ViewHolder {
         LinearLayout layout;
-        ImageView imageColor,imageLocation,profilePicture;
-        TextView title,time,date,description;
+        ImageView imageColor, imageLocation, profilePicture;
+        TextView title, time, date, description;
         LinearLayout background, foreground;
 
-        public ViewHolder(View v){
+        public ViewHolder(View v) {
             super(v);
             layout = v.findViewById(R.id.layout);
             imageColor = v.findViewById(R.id.colorImage);
@@ -111,7 +98,7 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder h, int position) {
         ScheduleItem item = list.get(position);
-        if(h instanceof ViewHolder) {
+        if (h instanceof ViewHolder) {
             ViewHolder holder = (ViewHolder) h;
             holder.title.setText(item.getTitle());
             if (item.getDescription().equals(""))
@@ -138,21 +125,23 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             //    holder.date.setVisibility(View.GONE);
             //}
             //else{
-                if(position == 0 || !item.getDate().equals(list.get(position-1).getDate())){
-                    holder.date.setVisibility(View.VISIBLE);
-                    if(item.getDate().equals(dateToday) && filterPosition <= 4)
-                        holder.date.setText("Today");
-                    else if(item.getDate().equals(dateYesterday) && filterPosition <= 4)
-                        holder.date.setText("Yesterday");
-                    else if(item.getDate().equals(dateTomorrow) && filterPosition <= 4)
-                        holder.date.setText("Tomorrow");
-                    else
-                        holder.date.setText(item.getDate());
-                }
-                else{
-                    holder.date.setVisibility(View.GONE);
-                }
-            //}
+
+            holder.layout.setVisibility(View.VISIBLE);
+            if (position == 0 || !item.getDate().equals(list.get(position - 1).getDate())) {
+                holder.date.setVisibility(View.VISIBLE);
+                if (item.getDate().equals(dateToday) && filterPosition <= 4)
+                    holder.date.setText("Today");
+                else if (item.getDate().equals(dateYesterday) && filterPosition <= 4)
+                    holder.date.setText("Yesterday");
+                else if (item.getDate().equals(dateTomorrow) && filterPosition <= 4)
+                    holder.date.setText("Tomorrow");
+                else
+                    holder.date.setText(item.getDate());
+            } else {
+                holder.date.setVisibility(View.GONE);
+            }
+
+            //
         }
     }
 
@@ -162,7 +151,83 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
 
-    public void setFilterPosition(int p){
+    void removeItem(int position) {
+        ScheduleItem scheduleItem = list.get(position);
+        Task task = realm.where(Task.class).equalTo("title", scheduleItem.title).equalTo("description", scheduleItem.description).equalTo("date", scheduleItem.date).equalTo("time", scheduleItem.time).findFirst();
+        if (task != null) {
+            realm.beginTransaction();
+            task.setIsInTrash(true);
+            realm.commitTransaction();
+
+            long timeInMillis = task.getTimeInMillis();
+            Intent intent1 = new Intent(context.getApplicationContext(), NotificationReceiver.class);
+            intent1.setAction(NotificationReceiver.ACTION_NOTIFICATION);
+            int id = (int) timeInMillis / 10000;
+            intent1.putExtra("id", timeInMillis);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(context.getApplicationContext(), id, intent1,
+                    0);
+            ((AlarmManager) context.getSystemService(Context.ALARM_SERVICE)).cancel(pendingIntent);
+        }
+        list.remove(position);
+        notifyItemRemoved(position);
+        if (position != list.size())
+            notifyItemChanged(position);
+    }
+
+    void initialize() {
+        list = new ArrayList<>();
+        List<Task> allTasks = new ArrayList<>();
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        long timeInMillis = calendar.getTimeInMillis();
+        allTasks.addAll(realm.where(Task.class).equalTo("isInTrash", false).greaterThanOrEqualTo("timeInMillis", timeInMillis).findAll());
+        Collections.sort(allTasks);
+        for (Task task : allTasks) {
+            ScheduleItem scheduleItem = new ScheduleItem(task.getTitle(), task.getTime(), task.getDescription(), null, task.getLocation(), task.getPriority());
+            scheduleItem.setDate(task.getDate());
+            list.add(scheduleItem);
+        }
+        allItems = new ArrayList<>(list);
+    }
+
+    void setSearchQuery(String query) {
+        searchQuery = query;
+        list = new ArrayList<>();
+        for (int i = 0; i < allItems.size(); i++) {
+            ScheduleItem item = allItems.get(i);
+            boolean matchesQuery =
+                    item.getTitle().toLowerCase().contains(searchQuery.toLowerCase()) ||
+                            item.getDescription().toLowerCase().contains(searchQuery.toLowerCase()) ||
+                            item.getDate().toLowerCase().contains(searchQuery.toLowerCase()) ||
+                            item.getTime().toLowerCase().contains(searchQuery.toLowerCase()) ||
+                            item.getDate().equals(dateToday) && "today".contains(searchQuery.toLowerCase()) ||
+                            item.getDate().equals(dateTomorrow) && "tomorrow".contains(searchQuery.toLowerCase());
+            if(matchesQuery) {
+               list.add(item);
+            }
+        }
+        notifyDataSetChanged();
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /*public void setFilterPosition(int p){
         filterPosition = p;
     }
 
@@ -321,28 +386,5 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             position = list.size()-1;
 
         return position;
-    }
-
-    void removeItem(int position){
-        ScheduleItem scheduleItem = list.get(position);
-        Task task = realm.where(Task.class).equalTo("title", scheduleItem.title).equalTo("description", scheduleItem.description).equalTo("date", scheduleItem.date).equalTo("time", scheduleItem.time).findFirst();
-        if(task != null) {
-            realm.beginTransaction();
-            task.setIsInTrash(true);
-            realm.commitTransaction();
-
-            long timeInMillis = task.getTimeInMillis();
-            Intent intent1 = new Intent(context.getApplicationContext(), NotificationReceiver.class);
-            intent1.setAction(NotificationReceiver.ACTION_NOTIFICATION);
-            int id = (int)timeInMillis/10000;
-            intent1.putExtra("id", timeInMillis);
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(context.getApplicationContext(), id, intent1,
-                    0);
-            ((AlarmManager)context.getSystemService(Context.ALARM_SERVICE)).cancel(pendingIntent);
-        }
-        list.remove(position);
-        notifyItemRemoved(position);
-        if(position != list.size())
-            notifyItemChanged(position);
-    }
+    }*/
 }

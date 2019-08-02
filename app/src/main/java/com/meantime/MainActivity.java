@@ -16,6 +16,9 @@ import androidx.work.WorkContinuation;
 import androidx.work.WorkManager;
 
 import android.Manifest;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ObjectAnimator;
 import android.app.AlarmManager;
 import android.content.Context;
 import android.content.Intent;
@@ -25,10 +28,15 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewTreeObserver;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -52,6 +60,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.jkb.slidemenu.SlideMenuAction;
 import com.jkb.slidemenu.SlideMenuLayout;
 
 import java.io.File;
@@ -91,6 +100,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     FriendsFragment friendsFragment;
     ScheduleFragment scheduleFragment;
     int filterPosition = 0;
+
+    LinearLayout searchLayout;
+    EditText search;
+    ImageView searchClear, searchBack;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -235,7 +248,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         overlay.setOnClickListener(filterCloseListener);
         toolbarOverlay.setOnClickListener(filterCloseListener);
 
-        for(int i = 2; i < layoutSpanOptions.getChildCount(); i++){
+        /*for(int i = 2; i < layoutSpanOptions.getChildCount(); i++){
             View view = layoutSpanOptions.getChildAt(i);
             final int finalI = i;
             if(view instanceof TextView){
@@ -303,7 +316,40 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     }, 300);
                 }
             });
-        }
+        }*/
+
+        searchLayout = findViewById(R.id.searchLayout);
+        search = findViewById(R.id.search);
+        searchBack = findViewById(R.id.searchBack);
+        searchClear = findViewById(R.id.searchClear);
+
+        search.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { }
+            @Override
+            public void afterTextChanged(Editable s) {
+                scheduleFragment.search(s.toString());
+                if(s.toString().equals("")){
+                    searchClear.setVisibility(View.GONE);
+                }
+                else{
+                    searchClear.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+        searchBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                hideSearch();
+            }
+        });
+        searchClear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                search.setText("");
+            }
+        });
+        hideSearchInitially();
 
         startScheduler();
     }
@@ -488,6 +534,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         if(item.getItemId() == android.R.id.home){
             slideMenu.openLeftSlide();
         }
+        else if(item.getItemId() == R.id.search){
+            showSearch();
+        }
         /*else if(item.getItemId() == R.id.friends){
             if(!friends) {
                 tab = 1;
@@ -557,6 +606,48 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             new AppSettingsDialog.Builder(this).build().show();
         }
         getContactsPermission();
+    }
+
+    void hideSearchInitially(){
+        searchLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                searchLayout.setTranslationY(0-searchLayout.getHeight());
+                searchLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+            }
+        });
+    }
+
+    void showSearch(){
+        searchLayout.setVisibility(View.VISIBLE);
+        slideMenu.setAllowTogging(false);
+        fabAdd.hide();
+        scheduleFragment.setInSearch(true);
+        ObjectAnimator objectAnimator = ObjectAnimator.ofFloat(searchLayout, "translationY", 0-searchLayout.getHeight(), 0);
+        objectAnimator.setDuration(300);
+        objectAnimator.start();
+        search.requestFocus();
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.showSoftInput(search, InputMethodManager.SHOW_IMPLICIT);
+    }
+
+    void hideSearch(){
+        ObjectAnimator objectAnimator = ObjectAnimator.ofFloat(searchLayout, "translationY", 0, 0-searchLayout.getHeight());
+        objectAnimator.setDuration(300);
+        objectAnimator.start();
+        objectAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                searchLayout.setVisibility(View.GONE);
+                fabAdd.show();
+                slideMenu.setAllowTogging(true);
+                search.clearFocus();
+                search.setText("");
+                scheduleFragment.setInSearch(false);
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(search.getWindowToken(), InputMethodManager.SHOW_IMPLICIT);
+            }
+        });
     }
 
     void startScheduler(){
