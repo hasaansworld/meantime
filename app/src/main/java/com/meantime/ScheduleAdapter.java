@@ -19,19 +19,24 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.shuhart.stickyheader.StickyAdapter;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -41,7 +46,7 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     Context context;
     List<Task> list;
-    List<Task> alltasks;
+    List<Task> allTasks;
     private List<String> dateList;
     Realm realm;
     int[] colors = {R.color.orange, R.color.green, R.color.red};
@@ -65,6 +70,7 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
         dateList = new ArrayList<>();
         initialize();
+        fetchUpdates();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -126,10 +132,11 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             if (friendsList.size() > 0) {
                 holder.friendsLayout.setVisibility(View.VISIBLE);
                 Friend first = friendsList.get(0);
-                if (first.getProfilePicPath().equals(""))
+                String profilePicPath = first.getProfilePicPath();
+                if (profilePicPath == null || profilePicPath.equals(""))
                     holder.profilePicture.setImageResource(R.drawable.profile_picture);
                 else
-                    Glide.with(context).load(first.getProfilePicPath()).into(holder.profilePicture);
+                    Glide.with(context).load(profilePicPath).into(holder.profilePicture);
                 if(friendsList.size() > 1){
                     holder.friendCount.setVisibility(View.VISIBLE);
                     holder.friendCount.setText("+"+(friendsList.size()-1));
@@ -175,6 +182,9 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     void removeItem(int position) {
         Task task = list.get(position);
+        DatabaseReference taskRef = FirebaseDatabase.getInstance().getReference().child("users").child(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()).child("tasks").child(Long.toString(task.getTimeInMillis()));
+        taskRef.child("isInTrash").setValue(true);
+
         if (task != null) {
             realm.beginTransaction();
             task.setIsInTrash(true);
@@ -196,23 +206,28 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     void initialize() {
-        List<Task> allTasks = new ArrayList<>();
+        allTasks = new ArrayList<>();
+        long timeInMillis = getTodayInMillis();
+        allTasks.addAll(realm.where(Task.class).equalTo("isInTrash", false).greaterThanOrEqualTo("timeInMillis", timeInMillis).findAll());
+        Collections.sort(allTasks);
+        list = new ArrayList<>();
+        if(allTasks != null) list.addAll(allTasks);
+    }
+
+    long getTodayInMillis(){
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, 0);
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
-        long timeInMillis = calendar.getTimeInMillis();
-        allTasks.addAll(realm.where(Task.class).equalTo("isInTrash", false).greaterThanOrEqualTo("timeInMillis", timeInMillis).findAll());
-        Collections.sort(allTasks);
-        list = new ArrayList<>(allTasks);
+        return calendar.getTimeInMillis();
     }
 
     void setSearchQuery(String query) {
         searchQuery = query;
         list = new ArrayList<>();
-        for (int i = 0; i < alltasks.size(); i++) {
-            Task task = alltasks.get(i);
+        for (int i = 0; i < allTasks.size(); i++) {
+            Task task = allTasks.get(i);
             boolean matchesQuery =
                     task.getTitle().toLowerCase().contains(searchQuery.toLowerCase()) ||
                             task.getDescription().toLowerCase().contains(searchQuery.toLowerCase()) ||
@@ -228,6 +243,181 @@ public class ScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
 
+    void fetchUpdates(){
+        final long todayInMillis = getTodayInMillis();
+        String myPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
+        DatabaseReference requestsRef = FirebaseDatabase.getInstance().getReference().child("users").child(myPhone).child("taskRequests");
+        requestsRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    for (DataSnapshot itemSnapshot : dataSnapshot.getChildren()) {
+                        String phoneNumber = itemSnapshot.getKey();
+                        for (DataSnapshot ds : itemSnapshot.getChildren()) {
+                            String requestId = ds.getKey();
+                            final DatabaseReference requestReference = FirebaseDatabase.getInstance().getReference().child("users").child(myPhone).child("taskRequests").child(phoneNumber).child(requestId);
+                            final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child("users").child(phoneNumber).child("tasks").child(requestId);
+                            if(Long.parseLong(requestId) >= todayInMillis) {
+
+                                databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                        if (dataSnapshot.exists()) {
+                                            List<Friend> friends = RealmUtils.getListsFromPhones((ArrayList<String>) dataSnapshot.child("friends").getValue());
+                                            Task task = new Task(
+                                                    Task.nextId(),
+                                                    (String) dataSnapshot.child("title").getValue(),
+                                                    (String) dataSnapshot.child("description").getValue(),
+                                                    (String) dataSnapshot.child("date").getValue(),
+                                                    (String) dataSnapshot.child("time").getValue(),
+                                                    (String) dataSnapshot.child("location").getValue(),
+                                                    Long.parseLong(requestId),
+                                                    0,
+                                                    friends,
+                                                    phoneNumber);
+
+                                            realm.beginTransaction();
+                                            realm.copyToRealmOrUpdate(task);
+                                            realm.commitTransaction();
+
+                                            if(!task.isInTrash()) {
+                                                for (int i = 0; i < list.size(); i++) {
+                                                    if (list.get(i).getTimeInMillis() > task.getTimeInMillis()) {
+                                                        list.add(i, task);
+                                                        notifyItemInserted(i);
+                                                        break;
+                                                    }
+                                                }
+                                            }
+
+                                            requestReference.removeValue();
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                                    }
+                                });
+                            }else{
+                                requestReference.removeValue();
+                            }
+
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+
+            /*@Override
+            public void ond(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                    requestsRef.child(phone).addChildEventListener(new ChildEventListener() {
+                        @Override
+                        public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                            if(dataSnapshot.exists()){
+                                String taskId = dataSnapshot.getKey();
+                                Random random = new Random();
+                                Toast.makeText(context, taskId+" "+(random.nextInt()%6), Toast.LENGTH_SHORT).show();
+                                final DatabaseReference thisRequest = requestsRef.child(phone).child(taskId);
+                                DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child("users").child(phone).child("tasks").child(taskId);
+
+                                if(Long.parseLong(taskId) >= todayInMillis) {
+                                    databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                            if (dataSnapshot.exists()) {
+                                                List<Friend> friends = RealmUtils.getListsFromPhones((ArrayList<String>) dataSnapshot.child("friends").getValue());
+                                                Task task = new Task(
+                                                        Task.nextId(),
+                                                        (String) dataSnapshot.child("title").getValue(),
+                                                        (String) dataSnapshot.child("description").getValue(),
+                                                        (String) dataSnapshot.child("date").getValue(),
+                                                        (String) dataSnapshot.child("time").getValue(),
+                                                        (String) dataSnapshot.child("location").getValue(),
+                                                        Long.parseLong(taskId),
+                                                        0,
+                                                        friends,
+                                                        phone);
+
+                                                realm.beginTransaction();
+                                                realm.copyToRealmOrUpdate(task);
+                                                realm.commitTransaction();
+                                                if(!task.isInTrash()) {
+                                                    for (int i = 0; i < list.size(); i++) {
+                                                        if (list.get(i).getTimeInMillis() > task.getTimeInMillis()) {
+                                                            list.add(i, task);
+                                                            notifyItemInserted(i);
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                thisRequest.removeValue();
+                                                databaseReference.removeEventListener(this);
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                                        }
+                                    });
+                                }
+                                else{
+                                    thisRequest.removeValue();
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                        }
+
+                        @Override
+                        public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+                        }
+
+                        @Override
+                        public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }*/
+
+        });
+    }
 
 
 

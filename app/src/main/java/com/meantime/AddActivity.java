@@ -394,7 +394,7 @@ public class AddActivity extends AppCompatActivity implements EasyPermissions.Pe
                         errorText.setVisibility(View.GONE);
                         if (friendsList.size() > 0) progressBar.setVisibility(View.VISIBLE);
                         if (tabLayout.getSelectedTabPosition() == 0) {
-                            Task task = new Task(title.getText().toString(), description.getText().toString(), dateText.getText().toString(), timeText.getText().toString(), location.getText().toString(), calendar.getTimeInMillis(), priority, friendsList);
+                            Task task = new Task(Task.nextId(), title.getText().toString(), description.getText().toString(), dateText.getText().toString(), timeText.getText().toString(), location.getText().toString(), calendar.getTimeInMillis(), priority, friendsList, "You");
                             String dateToday = DateFormat.format("dd MMM yyyy", Calendar.getInstance()).toString();
                             if(task.getDate().equals(dateToday))
                                 AlarmReceiver.scheduleTask(AddActivity.this, task, (AlarmManager)getSystemService(Context.ALARM_SERVICE));
@@ -407,6 +407,7 @@ public class AddActivity extends AppCompatActivity implements EasyPermissions.Pe
                                 hashMap.put("date", task.getDate());
                                 hashMap.put("priority", task.getPriority());
                                 hashMap.put("location", task.getLocation());
+                                hashMap.put("isInTrash", false);
                                 ref.setValue(hashMap)
                                         .addOnSuccessListener(new OnSuccessListener<Void>() {
                                             @Override

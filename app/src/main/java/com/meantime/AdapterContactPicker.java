@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -57,11 +58,16 @@ public class AdapterContactPicker extends RecyclerView.Adapter<AdapterContactPic
         }*/
         realm = RealmUtils.getRealm();
 
-        contactsList.addAll(realm.where(Friend.class).findAll());
+        String myPhone = FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber();
+        contactsList.addAll(realm.where(Friend.class).notEqualTo("phoneNumber", myPhone).findAll());
         Collections.sort(contactsList, new Comparator<Friend>() {
             @Override
             public int compare(Friend o1, Friend o2) {
-                return o1.getName().compareTo(o2.getName());
+                String o1name = o1.getName();
+                String o2name = o2.getName();
+                if(o1name == null) o1name = "Unknown";
+                if(o2name == null) o2name = "Unknown";
+                return o1name.compareTo(o2name);
             }
         });
     }

@@ -5,7 +5,7 @@ import androidx.annotation.Nullable;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
-public class Friend extends RealmObject {
+public class Friend extends RealmObject implements Comparable<Friend> {
     @PrimaryKey
     String phoneNumber;
     String name, profilePicPath;
@@ -59,5 +59,15 @@ public class Friend extends RealmObject {
         Friend other = (Friend) obj;
 
         return name.equals(other.name) && phoneNumber.equals(other.phoneNumber) && profilePicPath.equals(other.profilePicPath);
+    }
+
+    @Override
+    public int compareTo(Friend o) {
+        if(name == null)
+            return "Unknown".compareTo(o.getName());
+        else if(o.getName() == null)
+            return name.compareTo("Unknown");
+        else
+            return name.compareTo(o.getName());
     }
 }

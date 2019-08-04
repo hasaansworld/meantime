@@ -6,6 +6,8 @@ import android.widget.Toast;
 import androidx.room.migration.Migration;
 
 import io.realm.DynamicRealm;
+import io.realm.DynamicRealmObject;
+import io.realm.Realm;
 import io.realm.RealmMigration;
 import io.realm.RealmObjectSchema;
 import io.realm.RealmSchema;
@@ -17,6 +19,7 @@ public class MyMigration implements RealmMigration {
     public MyMigration(Context context){
         this.context = context;
     }
+    int id = 0;
 
     @Override
     public void migrate(DynamicRealm realm, long oldVersion, long newVersion) {
@@ -31,7 +34,22 @@ public class MyMigration implements RealmMigration {
             taskSchema.removeField("online");
             taskSchema.addField("isInTrash", boolean.class);
         }
+        if(oldVersion < 5){
+            taskSchema.addField("creator", String.class);
+        }
+        if(oldVersion < 6){
+            taskSchema.addField("id", int.class);
+            taskSchema.transform(new RealmObjectSchema.Function() {
+                @Override
+                public void apply(DynamicRealmObject obj) {
+                    id++;
+                    obj.setInt("id", id);
+                }
+            });
+            taskSchema.addPrimaryKey("id");
+        }
     }
+
 
 
     @Override

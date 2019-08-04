@@ -17,6 +17,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -107,19 +110,10 @@ public class TrashAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                 holder.description.setText(task.getDescription());
             holder.time.setText(task.getTime());
 
-            /*if (task.ge != null) {
-                holder.profilePicture.setVisibility(View.VISIBLE);
-                if (item.getImagePath().equals(""))
-                    holder.profilePicture.setImageResource(R.drawable.profile_picture);
-                else
-                    Glide.with(context).load(item.getImagePath()).into(holder.profilePicture);
-            } else
-                holder.profilePicture.setVisibility(View.GONE);*/
             if (task.getLocation().equals(""))
                 holder.imageLocation.setVisibility(View.GONE);
             else
                 holder.imageLocation.setVisibility(View.VISIBLE);
-
 
             holder.layout.setVisibility(View.VISIBLE);
             if (position == 0 || !task.getDate().equals(list.get(position - 1).getDate())) {
@@ -148,6 +142,15 @@ public class TrashAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     void removeItem(int position, boolean left) {
         Task task = list.get(position);
+        if(left) {
+            DatabaseReference taskRef = FirebaseDatabase.getInstance().getReference().child("users").child(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()).child("trash").child(Long.toString(task.getTimeInMillis()));
+            taskRef.removeValue();
+        }
+        else{
+            DatabaseReference taskRef = FirebaseDatabase.getInstance().getReference().child("users").child(FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber()).child("tasks").child(Long.toString(task.getTimeInMillis()));
+            taskRef.child("isInTrash").setValue(false);
+        }
+
         if (task != null) {
             realm.beginTransaction();
             if(left) {
@@ -178,7 +181,7 @@ public class TrashAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
         long timeInMillis = calendar.getTimeInMillis();
-        allTasks.addAll(realm.where(Task.class).equalTo("isInTrash", true).greaterThanOrEqualTo("timeInMillis", timeInMillis).findAll());
+        allTasks.addAll(realm.where(Task.class).equalTo("isInTrash", true).equalTo("creator", "You").greaterThanOrEqualTo("timeInMillis", timeInMillis).findAll());
         Collections.sort(allTasks);
         list = new ArrayList<>(allTasks);
     }

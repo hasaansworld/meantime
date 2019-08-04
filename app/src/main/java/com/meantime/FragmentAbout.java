@@ -24,7 +24,6 @@ public class FragmentAbout extends Fragment {
 
     TextView textAbout, textGender;
     SharedPreferences sharedPreferences;
-    View aboutSeparator;
     String[] genders = {"Male", "Female", "Other"};
     boolean isMyProfile;
 
@@ -40,9 +39,7 @@ public class FragmentAbout extends Fragment {
 
         textAbout = v.findViewById(R.id.textAbout);
         textGender = v.findViewById(R.id.textGender);
-        aboutSeparator = v.findViewById(R.id.aboutSeparator);
-        if(isMyProfile)
-            aboutSeparator.setVisibility(View.VISIBLE);
+
 
         return v;
     }

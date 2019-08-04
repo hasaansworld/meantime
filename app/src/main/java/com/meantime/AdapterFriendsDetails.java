@@ -55,11 +55,15 @@ public class AdapterFriendsDetails extends RecyclerView.Adapter<AdapterFriendsDe
     @Override
     public void onBindViewHolder(@NonNull AdapterFriendsDetails.ViewHolder holder, int position) {
         Friend friend = friendsList.get(position);
-        if(friend.getProfilePicPath().equals(""))
+        String profilePicPath = friend.getProfilePicPath();
+        if(profilePicPath == null || profilePicPath.equals(""))
             holder.profilePicture.setImageResource(R.drawable.profile_picture);
         else
             Glide.with(context).asBitmap().load(friend.getProfilePicPath()).into(holder.profilePicture);
-        holder.name.setText(friend.getName());
+        if(friend.getName() == null)
+            holder.name.setText("Unknown");
+        else
+            holder.name.setText(friend.getName());
         holder.phone.setText(friend.getPhoneNumber());
         holder.imageCreated.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
     }

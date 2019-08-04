@@ -92,16 +92,6 @@ public class ScheduleFragment extends Fragment {
         });
         new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(recyclerView);
 
-        /*recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-                updateCurrentPosition();
-            }
-        });*/
-
-
-        //recyclerView.setItemAnimator(new CustomItemAnimator());
-
         switcherLayout = v.findViewById(R.id.switcherLayout);
         dateSwitcher = v.findViewById(R.id.dateSwitcher);
         //monthSwitcher = v.findViewById(R.id.monthSwitcher);

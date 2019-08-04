@@ -77,6 +77,7 @@ public class UploadWorker extends Worker {
             hashMap.put("date", task.getDate());
             hashMap.put("priority", task.getPriority());
             hashMap.put("location", task.getLocation());
+            hashMap.put("isInTrash", false);
             ref.setValue(hashMap)
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
